@@ -16,6 +16,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  passwordHash  String?   // bcrypt hash, nullable for OAuth users
   role          String    @default("USER") // USER or ADMIN
   iqScore       Int       @default(100)
   createdAt     DateTime  @default(now())

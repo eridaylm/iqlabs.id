@@ -1,51 +1,64 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
+import { getSession } from '@/lib/auth'
+import bcrypt from 'bcryptjs'
 
 export async function GET() {
+  // Only allow ADMIN to trigger seed
+  const session = await getSession()
+  if (!session || (session.user as any).role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
   try {
-    const userCount = await prisma.user.count();
+    const userCount = await prisma.user.count()
     if (userCount > 0) {
-      return NextResponse.json({ message: 'Database already seeded' });
+      return NextResponse.json({ message: 'Database already seeded' })
     }
 
-    // Create users
+    const adminHash = await bcrypt.hash('Admin@iqlabs2024!', 12)
+    const userHash = await bcrypt.hash('User@iqlabs2024!', 12)
+
     const admin = await prisma.user.create({
       data: {
         name: 'OmniLearn Admin',
         email: 'admin@iqlabs.id',
+        passwordHash: adminHash,
         role: 'ADMIN',
         iqScore: 145,
       },
-    });
+    })
 
     const student1 = await prisma.user.create({
       data: {
         name: 'Budi Santoso',
         email: 'budi@example.com',
+        passwordHash: userHash,
         role: 'USER',
         iqScore: 110,
       },
-    });
+    })
 
     const student2 = await prisma.user.create({
       data: {
         name: 'Siti Aminah',
         email: 'siti@example.com',
+        passwordHash: userHash,
         role: 'USER',
         iqScore: 125,
       },
-    });
+    })
 
     const student3 = await prisma.user.create({
       data: {
         name: 'Andi Pratama',
         email: 'andi@example.com',
+        passwordHash: userHash,
         role: 'USER',
         iqScore: 105,
       },
-    });
+    })
 
-    // Create courses
     const stemCourse = await prisma.course.create({
       data: {
         title: 'Mastering Advanced Physics',
@@ -54,7 +67,7 @@ export async function GET() {
         price: 299000,
         status: 'PUBLISHED',
       },
-    });
+    })
 
     const kedinasanCourse = await prisma.course.create({
       data: {
@@ -64,7 +77,7 @@ export async function GET() {
         price: 499000,
         status: 'PUBLISHED',
       },
-    });
+    })
 
     const iqCourse = await prisma.course.create({
       data: {
@@ -74,9 +87,8 @@ export async function GET() {
         price: 199000,
         status: 'PUBLISHED',
       },
-    });
+    })
 
-    // Create Enrollments
     await prisma.enrollment.createMany({
       data: [
         { userId: student1.id, courseId: kedinasanCourse.id, progress: 45 },
@@ -84,9 +96,8 @@ export async function GET() {
         { userId: student2.id, courseId: stemCourse.id, progress: 10 },
         { userId: student3.id, courseId: kedinasanCourse.id, progress: 100 },
       ],
-    });
+    })
 
-    // Create Payments
     await prisma.payment.createMany({
       data: [
         { userId: student1.id, amount: 499000, status: 'SUCCESS' },
@@ -94,11 +105,11 @@ export async function GET() {
         { userId: student2.id, amount: 299000, status: 'SUCCESS' },
         { userId: student3.id, amount: 499000, status: 'SUCCESS' },
       ],
-    });
+    })
 
-    return NextResponse.json({ message: 'Seeding successful' });
+    return NextResponse.json({ message: 'Seeding successful' })
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Seeding failed' }, { status: 500 });
+    console.error(error)
+    return NextResponse.json({ error: 'Seeding failed' }, { status: 500 })
   }
 }

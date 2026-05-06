@@ -1,8 +1,13 @@
-import Link from "next/link";
-import { BrainCircuit, Book, Trophy, Target, PlayCircle, Clock } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { redirect } from "next/navigation"
+import { getSession } from "@/lib/auth"
+import Link from "next/link"
+import { Trophy } from "lucide-react"
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const session = await getSession()
+
+  if (!session) redirect('/login')
+
   return (
     <div className="min-h-screen bg-[#050505] text-[#e0e0e0] flex flex-col font-sans">
       {/* Top Navbar */}
@@ -23,7 +28,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Trophy className="w-3 h-3 text-blue-400 mr-2" />
             <span className="text-xs font-medium text-blue-300">IQ Score: 125</span>
           </div>
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 border border-white/10"></div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400 hidden sm:inline">{session.user?.name}</span>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 border border-white/10"></div>
+          </div>
         </div>
       </nav>
 
@@ -32,5 +40,5 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {children}
       </main>
     </div>
-  );
+  )
 }
